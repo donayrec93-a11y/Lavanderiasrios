@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}Boletas · Lavandería RÍOS{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>📋 Historial de Boletas</h2>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <form method="get">
+      <div class="filter-grid">
+        <div class="form-group filter-cliente">
+          <label>Cliente</label>
+        <input type="text" name="cliente" placeholder="Buscar por cliente..." value="{{ filtros.cliente }}" />
+        </div>
+        <div class="form-group">
+          <label>Desde</label>
+        <input type="date" name="desde" value="{{ filtros.desde }}" />
+        </div>
+        <div class="form-group">
+          <label>Hasta</label>
+        <input type="date" name="hasta" value="{{ filtros.hasta }}" />
+        </div>
+        <div class="filter-actions">
+          <button class="btn" type="submit">🔍 Filtrar</button>
+          <a class="btn secondary" href="{{ url_for('boletas') }}">🔄 Limpiar</a>
+          <a class="btn success" href="{{ url_for('export_csv') }}">📊 Exportar</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Resumen del período -->
+  <div class="resume">
+    <strong>Total del período:</strong> S/ {{ '%.2f'|format(total_periodo) }}
+    {% if filtros.cliente or filtros.desde or filtros.hasta %}
+      · <em>Filtrado</em>
+    {% endif %}
+  </div>
+
+  <!-- Tabla de boletas -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Fecha Emisión</th>
+          <th>Cliente</th>
+          <th>Resumen</th>
+          <th>Entrega</th>
+          <th>Método</th>
+          <th>Estado</th>
+          <th>Total</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in filas %}
+          <tr>
+            <td><strong>#{{ '%04d'|format(b.id) }}</strong></td>
+            <td>{{ b.fecha[:16] }}</td>
+            <td>
+              <strong>{{ b.cliente }}</strong>
+              <br><small style="color: var(--muted);">{{ b.telefono or 'Sin telf.' }}</small>
+            </td>
+            <td>
+              <span style="background: #fff3e0; color: #f57c00; padding: 2px 6px; border-radius: 4px; font-size: 12px;">Múltiples Items</span>
+              <br><small style="color: var(--muted);">{{ b.notas or 'Sin notas' }}</small>
+            </td>
+            <td>{{ b.entrega_fecha or 'No espec.' }}</td>
+            <td>{{ b.metodo_pago }}</td>
+            <td>
+              {% set estado_class = 'status-entregado' if b.estado == 'entregado' else 'status-registrado' %}
+              {% if admin_logged_in %}
+                <form action="{{ url_for('cambiar_estado_boleta', boleta_id=b.id) }}" method="post" class="status-form">
+                  <button type="submit" class="status-badge {{ estado_class }}" title="Clic para cambiar estado">
+                    {{ b.estado.upper() }}
+                  </button>
+                </form>
+              {% else %}
+                <span class="status-badge {{ estado_class }}">{{ b.estado.upper() }}</span>
+              {% endif %}
+            </td>
+            <td><strong>S/ {{ '%.2f'|format(b.total) }}</strong></td>
+            <td>
+              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 160px;">
+                <a href="{{ url_for('boleta_detalle', boleta_id=b.id) }}" 
+                   class="btn small" 
+                   style="font-size: 11px; padding: 6px 8px;">
+                  🔍 Ver Detalle
+                </a>
+                
+                <a href="https://wa.me/{{ b.telefono or WHATSAPP_NUMBER }}?text={{ 
+                  'Hola %s, sobre su boleta #%04d por S/ %.2f...'|format(b.cliente, b.id, b.total)|urlencode 
+                }}" 
+                   target="_blank" 
+                   class="btn success small" 
+                   style="font-size: 11px; padding: 6px 8px;">
+                  💚 WhatsApp
+                </a>
+
+                {% if admin_logged_in %}
+                <form action="{{ url_for('eliminar_boleta', boleta_id=b.id) }}" method="post" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta boleta? Esta acción no se puede deshacer.');">
+                  <button type="submit" class="btn danger small" style="font-size: 11px; padding: 6px 8px; width: 100%;">
+                    🗑️ Eliminar
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="12" style="text-align: center; padding: 40px; color: var(--muted);">
+              <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+              <h3 style="margin: 0 0 8px;">No se encontraron boletas</h3>
+              <p style="margin: 0;">
+                {% if filtros.cliente or filtros.desde or filtros.hasta %}
+                  Intenta ajustar los filtros o 
+                  <a href="{{ url_for('boletas') }}" style="color: var(--primary);">ver todas las boletas</a>
+                {% else %}
+                  <a href="{{ url_for('boleta_nueva') }}" style="color: var(--primary);">Crea tu primera boleta</a>
+                {% endif %}
+              </p>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  {% if total_paginas > 1 %}
+  <div class="pagination">
+    {% if pagina > 1 %}
+      <a class="btn secondary" href="{{ url_for('boletas', page=pagina-1, cliente=filtros.cliente, desde=filtros.desde, hasta=filtros.hasta) }}">
+        ← Anterior
+      </a>
+    {% endif %}
+    
+    <span style="padding: 12px 20px; background: #f8fafc; border-radius: 8px; font-weight: 600;">
+      Página {{ pagina }} de {{ total_paginas }}
+    </span>
+    
+    {% if pagina < total_paginas %}
+      <a class="btn secondary" href="{{ url_for('boletas', page=pagina+1, cliente=filtros.cliente, desde=filtros.desde, hasta=filtros.hasta) }}">
+        Siguiente →
+      </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Acciones rápidas -->
+  <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+    <a href="{{ url_for('boleta_nueva') }}" class="btn success">
+      ➕ Nueva Boleta
+    </a>
+    {% if admin_logged_in %}
+      <a href="{{ url_for('admin_panel') }}" class="btn secondary">⚙️ Cambiar Contraseñas</a>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+// Función para imprimir boleta individual
+function printBoleta(boletaId) {
+  // Intentar abrir la boleta detallada
+  const url = `{{ url_for('boleta_detalle', boleta_id=0) }}`.replace('0', boletaId);
+  
+  // Crear una ventana de impresión
+  const printWindow = window.open(url, '_blank', 'width=800,height=600');
+  
+  if (printWindow) {
+    printWindow.onload = function() {
+      // Esperar un poco para que cargue completamente
+      setTimeout(() => {
+        printWindow.print();
+      }, 1000);
+    };
+  } else {
+    alert('Por favor permite las ventanas emergentes para imprimir');
+  }
+}
+
+// Mejorar la experiencia de filtros
+document.addEventListener('DOMContentLoaded', function() {
+  // Auto-submit en cambio de fechas
+  const fechaInputs = document.querySelectorAll('input[type="date"]');
+  fechaInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      // Auto-submit después de seleccionar fecha
+      setTimeout(() => {
+        if (this.form) {
+          this.form.submit();
+        }
+      }, 300);
+    });
+  });
+  
+  // Limpiar filtros con Enter en el campo de cliente
+  const clienteInput = document.querySelector('input[name="cliente"]');
+  if (clienteInput) {
+    clienteInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.form.submit();
+      }
+    });
+  }
+});
+</script>
+
+<style>
+/* Mejoras específicas para la tabla de boletas */
+.table-wrap table {
+  min-width: 1000px;
+}
+
+.status-badge {
+  color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; text-transform: uppercase;
+  border: none; cursor: default; font-family: inherit;
+}
+.status-entregado { background: #10b981; }
+.status-registrado { background: #f59e0b; }
+
+.status-form {
+  margin: 0;
+}
+.status-form .status-badge {
+  cursor: pointer;
+  width: 100%;
+  transition: transform 0.1s ease;
+}
+.status-form .status-badge:hover { transform: scale(1.05); }
+
+.table-wrap td:last-child {
+  min-width: 160px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+.filter-cliente {
+  grid-column: 1 / -1; /* Ocupa todo el ancho al principio */
+}
+.filter-actions {
+  display: flex;
+  gap: 8px;
+}
+.filter-actions .btn {
+  flex-grow: 1;
+}
+
+@media (max-width: 768px) {
+  .table-wrap {
+    overflow-x: auto;
+  }
+}
+
+@media (min-width: 769px) {
+  .filter-cliente {
+    grid-column: auto; /* Comportamiento normal en desktop */
+  }
+  .filter-grid {
+    grid-template-columns: 2fr 1fr 1fr auto; /* Layout para desktop */
+  }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Iniciar Sesión · Lavandería RÍOS{% endblock %}
+{% block content %}
+<style>
+  .login-card {
+    max-width: 400px;
+    margin: 40px auto;
+    text-align: center;
+  }
+  .login-card h2 {
+    margin-bottom: 8px;
+  }
+  .login-card p {
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+</style>
+<section class="card login-card">
+  <h2>🔐 Iniciar Sesión</h2>
+  <p>Ingresa la contraseña para acceder al historial.</p>
+  <form method="post" class="form-grid">
+    <div class="form-group full">
+      <label for="password">Contraseña</label>
+      <input type="password" name="password" id="password" required autofocus />
+    </div>
+    <button type="submit" class="btn success full">Entrar</button>
+  </form>
+</section>
+{% endblock %}

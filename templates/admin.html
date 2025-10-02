@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Panel de Administración{% endblock %}
+{% block content %}
+<section class="card" style="max-width: 600px; margin: 40px auto;">
+  <h2>⚙️ Panel de Administración</h2>
+  <p style="color: var(--muted); margin-bottom: 24px;">
+    Aquí puedes cambiar las contraseñas de acceso al sistema.
+  </p>
+
+  <form method="post" class="form-grid">
+    <div class="form-group full">
+      <h3 style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Contraseña de Usuario</h3>
+      <label for="new_user_password">Nueva contraseña para el historial</label>
+      <input type="password" name="new_user_password" id="new_user_password" placeholder="Dejar en blanco para no cambiar" />
+      <small style="color: var(--muted);">Esta es la contraseña que se usa para ver las boletas.</small>
+    </div>
+
+    <div class="form-group full" style="margin-top: 24px;">
+      <h3 style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Contraseña de Administrador</h3>
+      <label for="new_admin_password">Nueva contraseña de administrador</label>
+      <input type="password" name="new_admin_password" id="new_admin_password" placeholder="Dejar en blanco para no cambiar" />
+      <small style="color: var(--muted);">Esta es la contraseña para acceder a este panel.</small>
+    </div>
+
+    <div class="form-group full" style="margin-top: 24px;">
+      <button type="submit" class="btn success">💾 Guardar Cambios</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

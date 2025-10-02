@@ -1,0 +1,323 @@
+/* ====== PALETA MODERNA ====== */
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --success: #10b981;
+  --success-hover: #059669;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --warning: #f59e0b;
+  --border: #e2e8f0;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ====== BASE ====== */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: var(--text);
+  line-height: 1.6;
+  transition: background 0.3s ease; /* Agregado para transición en el fondo */
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px 100px;
+}
+
+/* ====== NAVEGACIÓN MODERNA ====== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--success));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: var(--shadow);
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+}
+
+.nav a {
+  color: var(--text);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.nav a:hover {
+  background: #f1f5f9;
+  color: var(--primary);
+}
+
+.nav a.active {
+  background: var(--primary);
+  color: white;
+}
+
+/* ====== CARDS MODERNAS ====== */
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+
+/* ====== BOTONES MODERNOS ====== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  background: var(--primary);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+  min-height: 44px;
+}
+
+.btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn.success {
+  background: var(--success);
+}
+
+.btn.success:hover {
+  background: var(--success-hover);
+}
+
+.btn.secondary {
+  background: #f1f5f9;
+  color: var(--text);
+}
+
+.btn.secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn.danger {
+  background: var(--danger);
+}
+
+.btn.danger:hover {
+  background: var(--danger-hover);
+}
+
+.btn.small {
+  padding: 8px 12px;
+  font-size: 12px;
+  min-height: 36px;
+}
+
+/* ====== FORMULARIOS MODERNOS ====== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  grid-column: span 6;
+}
+
+.form-group.full {
+  grid-column: span 12;
+}
+
+.form-group.third {
+  grid-column: span 4;
+}
+
+.form-group.quarter {
+  grid-column: span 3;
+}
+
+label {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 14px;
+}
+
+input, select, textarea {
+  width: 100%;
+  background: white;
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-height: 48px;
+  outline: none;
+  transition: all 0.2s ease;
+  font-size: 16px;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ====== CHECKBOX MODERNO ====== */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.checkbox-custom {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+}
+
+.checkbox-custom input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-custom:hover input ~ .checkmark {
+  border-color: var(--primary);
+}
+
+.checkbox-custom input:checked ~ .checkmark {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-custom input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-custom .checkmark:after {
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-label {
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ====== IMPRESIÓN ====== */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  #boleta, #boleta * {
+    visibility: visible;
+  }
+  
+  #boleta {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+  
+  .footer, .navbar, .promo, .pagination, .filters, .resume, .form-actions {
+    display: none !important;
+  }
+}

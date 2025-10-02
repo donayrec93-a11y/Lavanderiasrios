@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Lavandería RÍOS{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de gestión para Lavandería RÍOS - Ropa limpia, clientes felices">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#3b82f6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Lavandería RÍOS">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧺</text></svg>">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <div class="brand">
+        <div class="logo">🧺</div>
+        <div>
+          <div>Lavandería RÍOS</div>
+          <div class="muted" style="font-size:13px;">Ropa limpia, clientes felices</div>
+        </div>
+      </div>      
+      <nav class="nav">
+        <a href="{{ url_for('home') }}" class="{% if request.endpoint=='home' %}active{% endif %}">🏠 <span class="nav-text">Inicio</span></a>
+        <a href="{{ url_for('boleta_nueva') }}" class="{% if request.endpoint=='boleta_nueva' %}active{% endif %}">➕ <span class="nav-text">Nueva</span></a>
+        <a href="{{ url_for('boletas') }}" class="{% if request.endpoint=='boletas' %}active{% endif %}">📋 <span class="nav-text">Boletas</span></a>
+      </nav>
+      <div class="user-actions">
+        {% if logged_in %}
+          <a href="{{ url_for('logout') }}" class="btn small secondary">Salir</a>
+        {% elif not request.endpoint in ['login', 'admin_login'] %}
+          <a href="{{ url_for('login') }}" class="btn small">Ingresar</a>
+        {% endif %}
+        {% if admin_logged_in %}
+          <a href="{{ url_for('admin_logout') }}" class="btn small danger">Salir Admin</a>
+        {% endif %}
+      </div>
+    </nav>
+    
+    {% if PROMO_BANNER %}
+      <div class="promo">{{ PROMO_BANNER }}</div>
+    {% endif %}
+  </header>
+
+  <main class="container">
+    <!-- Mensajes Flash Mejorados -->
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+      <div class="flash {{ category }}" role="alert">
+        <span class="flash-icon">
+          {% if category == 'success' %}✅{% elif category == 'error' %}❌{% else %}ℹ️{% endif %}
+        </span>
+        {{ message }}
+        <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+      </div>
+    {% endfor %}
+    
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div>© 2025 Lavandería RÍOS · {{ LAVA_DIRECCION }}</div>
+    <div style="font-size: 12px; margin-top: 4px;">
+      Sistema v2.0 · Desarrollado para un mejor servicio
+      <span style="margin: 0 8px;">|</span>
+      <a href="{{ url_for('admin_panel') }}" style="color: var(--muted);">Admin</a>
+    </div>
+  </footer>
+
+  <!-- Scripts globales -->
+  <script>
+    // Utilidades globales
+    window.LavanderiaUtils = {
+      formatMoney: (amount) => {
+        return new Intl.NumberFormat('es-PE', {
+          style: 'currency',
+          currency: 'PEN'
+        }).format(amount);
+      },
+      
+      formatPhone: (phone) => {
+        const cleaned = phone.replace(/\D/g, '');
+        if (cleaned.length === 9) {
+          return cleaned.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+        }
+        return phone;
+      },
+
+      showToast: (message, type = 'info') => {
+        const toast = document.createElement('div');
+        toast.className = `flash ${type} toast-notification`;
+        toast.innerHTML = `
+          <span class="flash-icon">
+            ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+          </span>
+          ${message}
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(-20px)';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+    };
+
+    // Auto-hide flash messages después de 5 segundos
+    document.addEventListener('DOMContentLoaded', function() {
+      const flashMessages = document.querySelectorAll('.flash:not(.toast-notification)');
+      flashMessages.forEach(flash => {
+        setTimeout(() => {
+          if (flash.parentElement) {
+            flash.style.opacity = '0';
+            flash.style.transform = 'translateY(-10px)';
+            setTimeout(() => flash.remove(), 300);
+          }
+        }, 5000);
+      });
+    });
+
+    // Confirmar acciones peligrosas
+    document.addEventListener('click', function(e) {
+      if (e.target.matches('.btn.danger, .btn-danger')) {
+        if (!confirm('¿Estás seguro de realizar esta acción?')) {
+          e.preventDefault();
+        }
+      }
+    });
+
+    // Service Worker para PWA (opcional)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/sw.js')
+          .then(function(registration) {
+            console.log('SW registered: ', registration);
+          })
+          .catch(function(registrationError) {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
+
+  <!-- Estilos adicionales para notificaciones toast -->
+  <style>
+    .flash {
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    .flash-close {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    
+    .flash-close:hover {
+      opacity: 1;
+    }
+    
+    .toast-notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      min-width: 300px;
+      animation: slideInRight 0.3s ease;
+    }
+    
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .flash-icon {
+      margin-right: 8px;
+      font-size: 16px;
+    }
+    
+    .promo {
+      text-align: center;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      color: #166534;
+      font-weight: 600;
+      border-bottom: 1px solid #bbf7d0;
+      font-size: 14px;
+    }
+    
+    @media (max-width: 640px) {
+      .nav-text {
+        display: none;
+      }
+      
+      .nav a {
+        padding: 8px 10px;
+        min-width: 40px;
+        text-align: center;
+      }
+      
+      .toast-notification {
+        right: 12px;
+        left: 12px;
+        min-width: auto;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .brand > div > div:last-child {
+        display: none;
+      }
+      
+      .navbar {
+        gap: 8px;
+      }
+      
+      .nav {
+        gap: 4px;
+      }
+    }
+  </style>
+</body>
+</html>

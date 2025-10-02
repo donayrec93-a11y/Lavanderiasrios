@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Inicio · Lavandería RIOS{% endblock %}
+{% block content %}
+  <section class="hero card">
+    <h1>¡Bienvenidos a Lavandería Ríos!</h1>
+    <p class="lead">
+      Cuidamos tus prendas con amor y dedicación porque tu confianza es lo más importante para nosotros.
+    </p>
+    <p class="lead" style="margin-top: 1em;">
+      Gracias por elegirnos, siempre será un placer atenderte. 😊
+    </p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <a class="btn success" href="{{ url_for('boleta_nueva') }}">➕ Nueva Boleta</a>
+      <a class="btn" href="{{ url_for('boletas') }}">📋 Ver Historial</a>
+    </div>
+  </section>
+{% endblock %}

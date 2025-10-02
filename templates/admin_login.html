@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Acceso de Administrador{% endblock %}
+{% block content %}
+<style>
+  .login-card {
+    max-width: 400px;
+    margin: 40px auto;
+    text-align: center;
+  }
+  .login-card h2 {
+    margin-bottom: 8px;
+  }
+  .login-card p {
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+</style>
+<section class="card login-card">
+  <h2>🔑 Acceso de Administrador</h2>
+  <p>Ingresa la contraseña de administrador.</p>
+  <form method="post" class="form-grid">
+    <div class="form-group full">
+      <label for="password">Contraseña de Admin</label>
+      <input type="password" name="password" id="password" required autofocus />
+    </div>
+    <button type="submit" class="btn success full">Entrar al Panel</button>
+  </form>
+</section>
+{% endblock %}

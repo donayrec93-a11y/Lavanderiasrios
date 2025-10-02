@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}Nueva Boleta · Lavandería RÍOS{% endblock %}
+{% block content %}
+<form method="post" id="boletaForm">
+  <div class="boleta-layout">
+    <!-- Columna de Items (principal) -->
+    <div class="items-column">
+      <div class="card">
+        <h2 class="section-title">📋 Lista de Servicios</h2>
+        <div id="items"></div>
+        <div style="margin-top: 16px;">
+          <button type="button" class="btn success" onclick="addItem()">➕ Agregar servicio</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna de Detalles (secundaria) -->
+    <div class="details-column">
+      <div class="card">
+        <h2 class="section-title">💼 Detalles de la Boleta</h2>
+        
+        <div class="form-group">
+          <label for="cliente">Cliente *</label>
+          <input type="text" name="cliente" id="cliente" required placeholder="Nombre completo" />
+        </div>
+        <div class="form-group">
+          <label for="telefono">Teléfono</label>
+          <input type="tel" name="telefono" id="telefono" placeholder="999 999 999" />
+        </div>
+        <div class="form-group">
+          <label for="direccion">Dirección</label>
+          <input type="text" name="direccion" id="direccion" value="{{ LAVA_DIRECCION }}" />
+        </div>
+
+        <div class="form-grid-inner">
+          <div class="form-group">
+            <label for="entrega_fecha">Fecha entrega</label>
+            <input type="date" name="entrega_fecha" id="entrega_fecha" />
+          </div>
+          <div class="form-group">
+            <label for="entrega_hora">Hora entrega</label>
+            <input type="time" name="entrega_hora" id="entrega_hora" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="metodo_pago">Método de pago</label>
+          <select name="metodo_pago" id="metodo_pago">
+            <option value="efectivo">💵 Efectivo</option>
+            <option value="yape">📱 Yape</option>
+            <option value="plin">📱 Plin</option>
+            <option value="tarjeta">💳 Tarjeta</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="a_cuenta">A cuenta (S/)</label>
+          <input type="number" name="a_cuenta" id="a_cuenta" step="0.01" value="0" min="0" />
+        </div>
+
+        <div class="form-group">
+          <label for="notas">Notas adicionales</label>
+          <textarea name="notas" id="notas" rows="3" placeholder="Ej: Prenda delicada, entregar antes de las 5 PM..."></textarea>
+        </div>
+
+        <!-- Totales -->
+        <div class="totals-summary">
+          <div class="total-row"><span>Total</span> <strong id="total">S/ 0.00</strong></div>
+          <div class="total-row saldo"><span>Saldo</span> <strong id="saldo">S/ 0.00</strong></div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="form-actions">
+          <button class="btn success" type="submit">💾 Guardar Boleta</button>
+          <a class="btn secondary" href="{{ url_for('boletas') }}">📋 Ver Boletas</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<style>
+  .boleta-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* 66% para items, 33% para detalles */
+    gap: 24px;
+  }
+  .items-column, .details-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .form-grid-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .section-title {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--primary);
+    font-size: 1.5rem;
+  }
+  .item-row {
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    background: #fdfdfd;
+  }
+  .item-row-header {
+    grid-column: 1 / -1; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .item-row-fields {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px 16px;
+  }
+  .totals-summary {
+    margin-top: 24px;
+    width: 100%; 
+    font-size: 1.1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .total-row { display: flex; justify-content: space-between; padding: 12px 16px; }
+  .total-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+  .total-row.saldo { font-size: 1.2rem; background: #f8fafc; }
+  .total-row.saldo strong { color: var(--primary); }
+
+  .form-actions {
+    display: flex; flex-direction: column; gap: 12px; margin-top: 24px;
+  }
+
+  @media (max-width: 992px) {
+    .boleta-layout {
+      grid-template-columns: 1fr; /* Apilar columnas en tablets y móviles */
+    }
+    .details-column {
+      /* Invertir el orden visual en pantallas pequeñas */
+      order: -1;
+    }
+  }
+</style>
+
+<script>
+  const PRECIOS = {
+    kilo: 3.50,
+    edredon: 15.00,
+    terno: 20.00,
+    perfumado: 0.50
+  };
+
+  const SERVICIOS = {
+    normal: { nombre: 'Normal', recargo: 0.0 },
+    seco: { nombre: 'Lavado en seco', recargo: 0.0 },
+    mano: { nombre: 'Lavado a mano', recargo: 0.0 }
+  };
+
+  function fmt(n) { 
+    return (Math.round(n * 100) / 100).toFixed(2); 
+  }
+
+  function addItem(pref = {}) {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    
+    const serviciosOptions = Object.entries(SERVICIOS)
+      .map(([key, val]) => `<option value="${key}" ${pref.servicio === key ? 'selected' : ''}>${val.nombre}</option>`)
+      .join('');
+
+    row.innerHTML = `
+      <div class="item-row-header">
+        <input name="item_desc[]" placeholder="Ej: Frazadas, ropa de cama..." value="${pref.desc || ''}" required style="flex-grow: 1; margin-right: 10px;">
+        <button type="button" class="btn danger small" onclick="removeItem(this)" title="Eliminar">🗑️ Eliminar</button>
+      </div>
+      <div class="item-row-fields">
+        <div><label>Tipo de Ítem</label><select name="item_tipo[]" onchange="onTipoChange(this)" required><option value="unidad" ${pref.tipo === 'unidad' ? 'selected' : ''}>Por Unidad</option><option value="kilogramo" ${pref.tipo === 'kilogramo' ? 'selected' : ''}>Por Kilogramo</option></select></div>
+        <div><label>Servicio</label><select name="item_servicio[]" onchange="recalc()">${serviciosOptions}</select></div>
+        <div><label>Cantidad</label><input name="item_cantidad[]" type="number" step="1" min="0" value="${pref.cantidad || 1}" oninput="recalc()"></div>
+        <div><label>Precio Unit. (S/)</label><input name="item_punit[]" type="number" step="0.01" min="0" value="${pref.pu || 0}" oninput="recalc()"></div>
+        <div class="item-importe-display"><label>Importe</label><strong>S/ 0.00</strong></div>
+      </div>
+    `;
+
+    document.getElementById('items').appendChild(row);
+    const sel = row.querySelector('select[name="item_tipo[]"]');
+    onTipoChange(sel);
+  }
+
+  function onTipoChange(sel) {
+    const row = sel.closest('.item-row');
+    const tipo = sel.value;
+    const cantidadInput = row.querySelector('input[name="item_cantidad[]"]');
+    const puInput = row.querySelector('input[name="item_punit[]"]');
+
+    switch (tipo) {
+      case 'kilogramo':
+        cantidadInput.step = "0.01";
+        cantidadInput.value = "1.0";
+        puInput.value = PRECIOS.kilo;
+        break;
+      case 'unidad':
+      default: 
+        cantidadInput.step = "1";
+        cantidadInput.value = "1";
+        puInput.value = PRECIOS.edredon; // Un valor por defecto para unidad
+    }
+    recalc();
+  }
+
+  function removeItem(btn) {
+    btn.closest('.item-row').remove();
+    recalc();
+  }
+
+  function recalc() {
+    let total = 0;
+
+    document.querySelectorAll('#items .item-row').forEach(row => {
+      const tipo = row.querySelector('select[name="item_tipo[]"]').value;
+      const servicioKey = row.querySelector('select[name="item_servicio[]"]').value;
+      const servicio = SERVICIOS[servicioKey] || SERVICIOS.normal;
+      const cantidad = parseFloat(row.querySelector('input[name="item_cantidad[]"]').value || 0);
+      const punit = parseFloat(row.querySelector('input[name="item_punit[]"]').value || 0);
+
+      let importe = 0;
+      importe = cantidad * punit;
+      importe += cantidad * servicio.recargo; // Siempre 0 ahora, pero mantenemos la lógica
+      total += importe;
+
+      // Actualizar el display del importe del item
+      const importeDisplay = row.querySelector('.item-importe-display strong');
+      if (importeDisplay) {
+        importeDisplay.textContent = 'S/ ' + fmt(importe);
+      }
+    });
+
+    const aCuenta = parseFloat(document.querySelector('input[name="a_cuenta"]').value || 0);
+    const saldo = total - aCuenta;
+
+    document.getElementById('total').textContent = 'S/ ' + fmt(total);
+    document.getElementById('saldo').textContent = 'S/ ' + fmt(saldo);
+  }
+
+  // Event listeners
+  document.getElementById('boletaForm').addEventListener('input', recalc);
+  document.getElementById('a_cuenta').addEventListener('input', recalc);
+
+  // Agregar primera fila por defecto
+  addItem({ tipo: 'unidad' });
+
+  // Configurar fecha mínima (hoy)
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('entrega_fecha').min = today;
+
+  // Formatear teléfono automáticamente
+  document.getElementById('telefono').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 0) {
+      if (value.length <= 3) {
+        value = value;
+      } else if (value.length <= 6) {
+        value = value.slice(0, 3) + ' ' + value.slice(3);
+      } else {
+        value = value.slice(0, 3) + ' ' + value.slice(3, 6) + ' ' + value.slice(6, 9);
+      }
+    }
+    e.target.value = value;
+  });
+</script>
+{% endblock %}
